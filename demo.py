@@ -144,7 +144,7 @@ def mysql_test():
 
     sql = 'insert into test(link,title) values(%s,%s);'
     data = [
-        ('https://www.5445544/', '111111111111'),
+        ('https://www.123.com', '123'),
     ]
     # 以字符串形式书写SQL语句
 
