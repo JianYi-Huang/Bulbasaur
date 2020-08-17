@@ -5,6 +5,7 @@ import time
 import emoji
 import random
 import pandas
+import pymysql
 import logging
 import requests
 from datetime import datetime
@@ -75,7 +76,7 @@ logging.basicConfig(level=logging.INFO,
                     filename='C:\\Users\\Administrator\\Desktop\\豆瓣哈组标题和链接.log', # 日志保存路径
                     filemode='w')
 
-topic_names = []
+topic_titles = []
 topic_author = []
 topic_links = []
 topic_times = []
@@ -95,11 +96,14 @@ def get(start_page=1, end_page=1):
         for link in links:
             _link = str(link.select('a')[0])
             if _link.find('title="', 0, len(_link)) > -1:
-                title = link.select('a')[0]['title'] # 获取帖子标题
-                href = link.select('a')[0]['href'] # 获取帖子链接
-                topic_names.append(title)
-                topic_links.append(href)
-
+                title = link.select('a')[0]['title'] # 提取出话题标题
+                href = link.select('a')[0]['href'] # 提取出话题链接
+                num = int(re.sub("\D", "", href))
+                print(num)
+                topic_titles.append(title) # 把刚获取到的标题插进话题标题表
+                topic_links.append(href) # 把刚获取到的链接插进话题链接表
+                print(topic_titles)
+                print(topic_links)
                 # 获取发帖时间
                 # data = requests.get(href, headers=get_headers(href))
                 # data.encoding = 'utf-8'
@@ -112,13 +116,13 @@ def get(start_page=1, end_page=1):
         start_page += 1
         time.sleep(5)
 
-def test():
+def seve_excel():
     # df_1 = pandas.DataFrame.from_dict({'发帖时间' : pandas.Categorical(topic_times),
     #                 '作者' : pandas.Categorical(topic_author),
-    #                 '标题' : pandas.Categorical(topic_names),
+    #                 '标题' : pandas.Categorical(topic_titles),
     #                 '链接' : pandas.Categorical(topic_links),
     #                 }, orient='index')
-    df_1 = pandas.DataFrame({'标题' : pandas.Categorical(topic_names),
+    df_1 = pandas.DataFrame({'标题' : pandas.Categorical(topic_titles),
                 '链接' : pandas.Categorical(topic_links),
                 })
     print(df_1)
@@ -144,7 +148,7 @@ def mysql_test():
 
     sql = 'insert into test(link,title) values(%s,%s);'
     data = [
-        ('https://www.123.com', '123'),
+        ('https://www.123.com', '123'), 
     ]
     # 以字符串形式书写SQL语句
 
@@ -193,12 +197,6 @@ def mysql_test():
     cursor.close()
     conn.close()
 
-    num = re.sub("\D", "", 'https://www.douban.com/group/topic/188285848/')
-    print(type(int(num)))
-
-
 if __name__ == '__main__':
     get()
-    # test()
-    mysql_test()
-    # print(time.gmtime(1596727146))
+    # mysql_test()
