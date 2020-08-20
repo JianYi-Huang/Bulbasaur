@@ -80,9 +80,9 @@ topic_titles = []
 topic_author = []
 topic_links = []
 topic_times = []
+topic_id = []
 
 def get(start_page=1, end_page=1):
-    logging.info('[get] 已进入小组首页')
     while start_page <= end_page:
         logging.info('[get] 已进入小组第' + str(start_page) + '页')
         print('[get] 已进入小组第' + str(start_page) + '页')
@@ -92,18 +92,20 @@ def get(start_page=1, end_page=1):
         print('resp:', data.ok)
         data.encoding = 'utf-8'
         soup = BeautifulSoup(data.text, 'html.parser')
+        # print(soup)
+        # time.sleep(5000)
         links = soup.select('.title')
         for link in links:
+            print(link)
+            time.sleep(5000)
             _link = str(link.select('a')[0])
             if _link.find('title="', 0, len(_link)) > -1:
                 title = link.select('a')[0]['title'] # 提取出话题标题
                 href = link.select('a')[0]['href'] # 提取出话题链接
                 num = int(re.sub("\D", "", href))
-                print(num)
                 topic_titles.append(title) # 把刚获取到的标题插进话题标题表
                 topic_links.append(href) # 把刚获取到的链接插进话题链接表
-                print(topic_titles)
-                print(topic_links)
+                topic_id.append(num)
                 # 获取发帖时间
                 # data = requests.get(href, headers=get_headers(href))
                 # data.encoding = 'utf-8'
