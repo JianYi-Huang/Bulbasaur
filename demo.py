@@ -143,8 +143,8 @@ def seve_excel():
     #                 '标题' : pandas.Categorical(topic_titles),
     #                 '链接' : pandas.Categorical(topic_links),
     #                 }, orient='index')
-    df_1 = pandas.DataFrame({'标题' : pandas.Categorical(),
-                '链接' : pandas.Categorical(),
+    df_1 = pandas.DataFrame({'标题' : pandas.Categorical([1,2,3,4,5]),
+                '链接' : pandas.Categorical([1,2,3,4,5]),
                 })
     print(df_1)
     df_1.to_excel('豆瓣哈组数据.xlsx')
@@ -208,7 +208,7 @@ def mysql_test():
     
     sql = 'SELECT MAX(id) FROM test;' # 获取test表下id字段最大的值
     # sql = 'insert ignore into test(link, title, author) values("test9@163.com", "12345", "56789");'
-    ver = cursor.execute(sql)
+    cursor.execute(sql)
     data = cursor.fetchone()
     print(data)
     # 逻辑:一阶段用insert ignore直接存入全部需要存入的数据,二阶段进入链接获取图片发帖时间等信息后进行一个update操作.(二阶段只会建立在一阶段前提下进行,所以二阶段只需要进行更新数据即可.)
