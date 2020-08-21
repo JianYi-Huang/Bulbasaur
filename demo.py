@@ -76,36 +76,51 @@ logging.basicConfig(level=logging.INFO,
                     filename='C:\\Users\\Administrator\\Desktop\\豆瓣哈组标题和链接.log', # 日志保存路径
                     filemode='w')
 
-topic_titles = []
-topic_author = []
-topic_links = []
-topic_times = []
-topic_id = []
+# 连接database
+conn = pymysql.connect(
+    host = '127.0.0.1',
+    user = 'root', 
+    password = 'usbw',
+    database = 'douban',
+    charset = 'utf8mb4')
+# 得到一个可以执行SQL语句的光标对象
+cursor = conn.cursor()  # 执行完毕返回的结果集默认以元组显示                   
 
-def get(start_page=1, end_page=1):
+topic_values = {'group': None, 'title': None, 'author': None, 'link': None, 'time': None, 'topic_id':None}
+
+
+def get(start_page=1, end_page=999):
     while start_page <= end_page:
         logging.info('[get] 已进入小组第' + str(start_page) + '页')
         print('[get] 已进入小组第' + str(start_page) + '页')
         url = 'https://www.douban.com/group/638298/discussion?start=' + str((start_page - 1) * 25) # 哈哈哈哈哈哈哈哈哈哈哈小组
         # print(url)
         data = requests.get(url, headers=get_headers(url))
-        print('resp:', data.ok)
+        print('start_page:', start_page, 'resp:', data.ok)
         data.encoding = 'utf-8'
         soup = BeautifulSoup(data.text, 'html.parser')
-        # print(soup)
-        # time.sleep(5000)
         links = soup.select('.title')
         for link in links:
-            print(link)
-            time.sleep(5000)
             _link = str(link.select('a')[0])
             if _link.find('title="', 0, len(_link)) > -1:
-                title = link.select('a')[0]['title'] # 提取出话题标题
-                href = link.select('a')[0]['href'] # 提取出话题链接
-                num = int(re.sub("\D", "", href))
-                topic_titles.append(title) # 把刚获取到的标题插进话题标题表
-                topic_links.append(href) # 把刚获取到的链接插进话题链接表
-                topic_id.append(num)
+
+                topic_values['group'] = '哈哈哈哈哈哈哈哈哈哈哈小组'
+                topic_values['title'] = link.select('a')[0]['title'] # 提取出话题标题
+                topic_values['link'] = link.select('a')[0]['href'] # 提取出话题链接
+                topic_values['topic_id'] = int(re.sub("\D", "", topic_values['link']))
+
+
+                sql = 'insert ignore into hazu_copy1(group_name,title,link,topic_id) values("%s","%s", "%s", %s);' %(topic_values['group'], topic_values['title'], topic_values['link'], topic_values['topic_id'])
+                cursor.execute(sql)
+                # 以字符串形式书写SQL语句R
+                # 拼接并执行sql语句
+                # cursor.executemany(sql, data)
+                # local_var = cursor.executemany(sql, data)
+                # print(local_var)
+                # sql = 'insert ignore into hazu(group,title,link,topic_id) values(%s,%s,%s,%s);' %(group, title, href, num) # insert ignore 表示，如果中已经存在相同的记录，则忽略当前新数据；
+                # print(sql)
+                # cursor.execute(sql)
+                # 以字符串形式书写SQL语句
                 # 获取发帖时间
                 # data = requests.get(href, headers=get_headers(href))
                 # data.encoding = 'utf-8'
@@ -113,10 +128,14 @@ def get(start_page=1, end_page=1):
                 # timesource = soup.select('.color-green')[0].text
                 # _time = datetime.strptime(timesource, '%Y-%m-%d %H:%M:%S')
                 
-                print('标题:', title, '链接:', href)
+                # print('标题:', title, '链接:', href)
                 # logging.info('[info] 发帖时间:' + timesource + '    标题:' + emoji.demojize(title) + '   链接:' + str(href))
+        conn.commit()
         start_page += 1
         time.sleep(5)
+        # 关闭连接
+    cursor.close()
+    conn.close()
 
 def seve_excel():
     # df_1 = pandas.DataFrame.from_dict({'发帖时间' : pandas.Categorical(topic_times),
@@ -148,24 +167,35 @@ def mysql_test():
     # 定义要执行的sql语句
     print(type(cursor))
 
-    sql = 'insert into test(link,title) values(%s,%s);'
-    data = [
-        ('https://www.123.com', '123'), 
-    ]
+    group11 = '哈哈哈哈哈哈哈哈哈哈哈小组'
+    title11 = '原创加水印｜很野的淘宝图片识别'
+    href11 = 'https://www.douban.com/group/topic/190342525/'
+    num11 = int(190342525)
+
+    sql = "insert ignore into hazu(group_name,title,link,topic_id) values(%s,%s,%s,%s);" %(group11, title11, href11, num11) # insert ignore 表示，如果中已经存在相同的记录，则忽略当前新数据；
+    sql_3 = 'insert ignore into hazu(group_name,title,link,topic_id) values("%s","%s", "%s", %s);' %(group11, title11, href11, num11)
+    var = cursor.execute(sql_3)
+    print(var)
+    conn.commit()  # 事务提交
+
+    
+    # cursor.execute(sql_1)
+    # sql = 'insert into test(link,title) values(%s,%s);'
+
     # 以字符串形式书写SQL语句
 
     # 拼接并执行sql语句
     # cursor.executemany(sql, data)
 
-    try:
-        cursor.executemany(sql, data)
-    except Exception as e:
-        conn.rollback()  # 事务回滚
-        print('事务处理失败', e)
-    else:
-        # 涉及写操作要注意提交
-        conn.commit()  # 事务提交
-        print('事务处理成功', cursor.rowcount)
+    # try:
+    #     cursor.executemany(sql_2, data)
+    # except Exception as e:
+    #     conn.rollback()  # 事务回滚
+    #     print('事务处理失败', e)
+    # else:
+    #     # 涉及写操作要注意提交
+    #     conn.commit()  # 事务提交
+    #     print('事务处理成功', cursor.rowcount)
 
     # 更新
     # sql = 'update test set title="2222", author="小贱" where link="01";'
@@ -176,7 +206,7 @@ def mysql_test():
     # insert ignore into table_name(email,phone,user_id) values('test9@163.com','99999','9999'); # insert ignore 表示，如果中已经存在相同的记录，则忽略当前新数据；
     # insert replace into table_name(email,phone,user_id) values('test9@163.com','99999','9999'); # insert replace 表示，如果中已经存在相同的记录，则忽略当前新数据；
     
-    sql = 'SELECT MAX(id) FROM test;'
+    sql = 'SELECT MAX(id) FROM test;' # 获取test表下id字段最大的值
     # sql = 'insert ignore into test(link, title, author) values("test9@163.com", "12345", "56789");'
     ver = cursor.execute(sql)
     data = cursor.fetchone()
