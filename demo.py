@@ -143,8 +143,8 @@ def seve_excel():
     #                 '标题' : pandas.Categorical(topic_titles),
     #                 '链接' : pandas.Categorical(topic_links),
     #                 }, orient='index')
-    df_1 = pandas.DataFrame({'标题' : pandas.Categorical(topic_titles),
-                '链接' : pandas.Categorical(topic_links),
+    df_1 = pandas.DataFrame({'标题' : pandas.Categorical(),
+                '链接' : pandas.Categorical(),
                 })
     print(df_1)
     df_1.to_excel('豆瓣哈组数据.xlsx')
