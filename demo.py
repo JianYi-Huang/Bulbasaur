@@ -69,12 +69,12 @@ def get_headers(url, use='pc'):
     }
     return headers
 
-logging.FileHandler(filename='豆瓣哈组标题和链接.log', encoding='utf-8')
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
-                    datefmt='%Y-%m-%d %A %H:%M:%S',
-                    filename='C:\\Users\\Administrator\\Desktop\\豆瓣哈组标题和链接.log', # 日志保存路径
-                    filemode='w')
+# logging.FileHandler(filename='豆瓣哈组标题和链接.log', encoding='utf-8')
+# logging.basicConfig(level=logging.INFO,
+#                     format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
+#                     datefmt='%Y-%m-%d %A %H:%M:%S',
+#                     filename='C:\\Users\\Administrator\\Desktop\\豆瓣哈组标题和链接.log', # 日志保存路径
+#                     filemode='w')
 
 # 连接database
 conn = pymysql.connect(
@@ -91,7 +91,7 @@ topic_values = {'group': None, 'title': None, 'author': None, 'link': None, 'tim
 
 def get(start_page=1, end_page=999):
     while start_page <= end_page:
-        logging.info('[get] 已进入小组第' + str(start_page) + '页')
+        # logging.info('[get] 已进入小组第' + str(start_page) + '页')
         print('[get] 已进入小组第' + str(start_page) + '页')
         url = 'https://www.douban.com/group/638298/discussion?start=' + str((start_page - 1) * 25) # 哈哈哈哈哈哈哈哈哈哈哈小组
         # print(url)
@@ -128,8 +128,6 @@ def get(start_page=1, end_page=999):
                 # timesource = soup.select('.color-green')[0].text
                 # _time = datetime.strptime(timesource, '%Y-%m-%d %H:%M:%S')
                 
-                # print('标题:', title, '链接:', href)
-                # logging.info('[info] 发帖时间:' + timesource + '    标题:' + emoji.demojize(title) + '   链接:' + str(href))
         conn.commit()
         start_page += 1
         time.sleep(5)
