@@ -89,7 +89,7 @@ cursor = conn.cursor()  # 执行完毕返回的结果集默认以元组显示
 topic_values = {'group': None, 'title': None, 'author': None, 'link': None, 'time': None, 'topic_id':None}
 
 
-def get(start_page=1, end_page=3):
+def get(start_page=1, end_page=1):
     while start_page <= end_page:
         # logging.info('[get] 已进入小组第' + str(start_page) + '页')
         print('[get] 已进入小组第' + str(start_page) + '页')
