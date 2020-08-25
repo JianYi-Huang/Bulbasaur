@@ -7,7 +7,7 @@ eg:
 
 ```
 Bulbasaur 
-├── demo.py
+├── main.py
 └── README.md
 ```
 
