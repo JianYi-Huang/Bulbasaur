@@ -69,13 +69,6 @@ def get_headers(url, use='pc'):
     }
     return headers
 
-# logging.FileHandler(filename='豆瓣哈组标题和链接.log', encoding='utf-8')
-# logging.basicConfig(level=logging.INFO,
-#                     format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
-#                     datefmt='%Y-%m-%d %A %H:%M:%S',
-#                     filename='C:\\Users\\Administrator\\Desktop\\豆瓣哈组标题和链接.log', # 日志保存路径
-#                     filemode='w')
-
 # 连接database
 conn = pymysql.connect(
     host = '127.0.0.1',
@@ -91,7 +84,6 @@ topic_values = {'group': None, 'title': None, 'author': None, 'link': None, 'tim
 
 def get(start_page=1, end_page=1):
     while start_page <= end_page:
-        # logging.info('[get] 已进入小组第' + str(start_page) + '页')
         print('[get] 已进入小组第' + str(start_page) + '页')
         url = 'https://www.douban.com/group/638298/discussion?start=' + str((start_page - 1) * 25) # 哈哈哈哈哈哈哈哈哈哈哈小组
         # print(url)
@@ -137,98 +129,5 @@ def get(start_page=1, end_page=1):
     cursor.close()
     conn.close()
 
-def seve_excel():
-    # df_1 = pandas.DataFrame.from_dict({'发帖时间' : pandas.Categorical(topic_times),
-    #                 '作者' : pandas.Categorical(topic_author),
-    #                 '标题' : pandas.Categorical(topic_titles),
-    #                 '链接' : pandas.Categorical(topic_links),
-    #                 }, orient='index')
-    df_1 = pandas.DataFrame({'标题' : pandas.Categorical([1,2,3,4,5]),
-                '链接' : pandas.Categorical([1,2,3,4,5]),
-                })
-    print(df_1)
-    df_1.to_excel('豆瓣哈组数据.xlsx')
-
-
-
-def mysql_test():
-    # 导入pymysql模块
-    import pymysql
-    # 连接database
-    conn = pymysql.connect(
-        host = '127.0.0.1',
-        user = 'root', 
-        password = 'usbw',
-        database = 'douban',
-        charset = 'utf8mb4')
-    # 得到一个可以执行SQL语句的光标对象
-    cursor = conn.cursor()  # 执行完毕返回的结果集默认以元组显示
-    # 得到一个可以执行SQL语句并且将结果作为字典返回的游标
-    # 定义要执行的sql语句
-    print(type(cursor))
-
-    group11 = '哈哈哈哈哈哈哈哈哈哈哈小组'
-    title11 = '原创加水印｜很野的淘宝图片识别'
-    href11 = 'https://www.douban.com/group/topic/190342525/'
-    num11 = int(190342525)
-
-    sql = "insert ignore into hazu(group_name,title,link,topic_id) values(%s,%s,%s,%s);" %(group11, title11, href11, num11) # insert ignore 表示，如果中已经存在相同的记录，则忽略当前新数据；
-    sql_3 = 'insert ignore into hazu(group_name,title,link,topic_id) values("%s","%s", "%s", %s);' %(group11, title11, href11, num11)
-    var = cursor.execute(sql_3)
-    print(var)
-    conn.commit()  # 事务提交
-
-    
-    # cursor.execute(sql_1)
-    # sql = 'insert into test(link,title) values(%s,%s);'
-
-    # 以字符串形式书写SQL语句
-
-    # 拼接并执行sql语句
-    # cursor.executemany(sql, data)
-
-    # try:
-    #     cursor.executemany(sql_2, data)
-    # except Exception as e:
-    #     conn.rollback()  # 事务回滚
-    #     print('事务处理失败', e)
-    # else:
-    #     # 涉及写操作要注意提交
-    #     conn.commit()  # 事务提交
-    #     print('事务处理成功', cursor.rowcount)
-
-    # 更新
-    # sql = 'update test set title="2222", author="小贱" where link="01";'
-    # 拼接并执行sql语句
-    # cursor.execute(sql)
-
-
-    # insert ignore into table_name(email,phone,user_id) values('test9@163.com','99999','9999'); # insert ignore 表示，如果中已经存在相同的记录，则忽略当前新数据；
-    # insert replace into table_name(email,phone,user_id) values('test9@163.com','99999','9999'); # insert replace 表示，如果中已经存在相同的记录，则忽略当前新数据；
-    
-    sql = 'SELECT MAX(id) FROM test;' # 获取test表下id字段最大的值
-    # sql = 'insert ignore into test(link, title, author) values("test9@163.com", "12345", "56789");'
-    cursor.execute(sql)
-    data = cursor.fetchone()
-    print(data)
-    # 逻辑:一阶段用insert ignore直接存入全部需要存入的数据,二阶段进入链接获取图片发帖时间等信息后进行一个update操作.(二阶段只会建立在一阶段前提下进行,所以二阶段只需要进行更新数据即可.)
-
-    '''
-    SELECT MAX(Age) FROM Student {查询学生表中年级最大的}
-    SELECT MIN(Age) FROM Student {查询学生表中年级最小的}
-    SELECT AVG(Age) FROM Student {查询学生的平均年级}
-    SELECT COUNT(*) FROM Student {查询表中的总记录}
-    '''
-
-    conn.commit()
-
-    # 涉及写操作要注意提交
-    # conn.commit()
-    
-    # 关闭连接
-    cursor.close()
-    conn.close()
-
 if __name__ == '__main__':
     get()
-    # mysql_test()
