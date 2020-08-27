@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+# -*- encoding: utf-8 -*-
+'''
+    FileName : startup.py
+    Date : 2020/08/28 00:02:23
+    Author : HuangJianYi
+    Copyright : © 2020 HuangJianYi <vahx@foxmail.com>
+    License : MIT, see LICENSE for more details.
+'''
+
+
 import re
 import time
 import emoji
