@@ -9,16 +9,19 @@
 '''
 
 
+import logging
+import random
 import re
 import time
+from datetime import datetime
+
 import emoji
-import random
 import pandas
 import pymysql
-import logging
 import requests
-from datetime import datetime
 from bs4 import BeautifulSoup
+
+
 def get_headers(url, use='pc'):
     pc_agents = [
         "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; en-us) AppleWebKit/534.50 (KHTML, like Gecko) Version/5.1 Safari/534.50",
@@ -60,9 +63,9 @@ def get_headers(url, use='pc'):
         "Openwave/ UCWEB7.0.2.37/28/999",
         "Mozilla/4.0 (compatible; MSIE 6.0; ) Opera/UCWEB7.0.2.37/28/999"
     ]
-    referer = lambda url: re.search(
-        "^((http://)|(https://))?([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}(/)", url).group()
-    if use == 'phone': # 随机获取一个headers
+    def referer(url): return re.search(
+        r"^((http://)|(https://))?([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}(/)", url).group()
+    if use == 'phone':  # 随机获取一个headers
         agent = random.choice(phone_agents)
     else:
         agent = random.choice(pc_agents)
@@ -78,26 +81,29 @@ def get_headers(url, use='pc'):
     }
     return headers
 
+
 # 连接database
 conn = pymysql.connect(
-    host = '127.0.0.1',
-    user = 'root', 
-    password = 'usbw',
-    database = 'douban',
-    charset = 'utf8mb4')
+    host='127.0.0.1',
+    user='root',
+    password='usbw',
+    database='douban',
+    charset='utf8mb4')
 # 得到一个可以执行SQL语句的光标对象
-cursor = conn.cursor()  # 执行完毕返回的结果集默认以元组显示                   
+cursor = conn.cursor()  # 执行完毕返回的结果集默认以元组显示
 
-topic_values = {'group': None, 'title': None, 'author': None, 'link': None, 'time': None, 'topic_id':None}
+topic_values = {'group': None, 'title': None, 'author': None,
+                'link': None, 'time': None, 'topic_id': None}
 
 
-def get(start_page=1, end_page=1):
-    while start_page <= end_page:
-        print('[get] 已进入小组第' + str(start_page) + '页')
-        url = 'https://www.douban.com/group/638298/discussion?start=' + str((start_page - 1) * 25) # 哈哈哈哈哈哈哈哈哈哈哈小组
+def start(page=1):
+    while True:
+        print('已进入小组第' + str(page) + '页')
+        url = 'https://www.douban.com/group/638298/discussion?start=' + \
+            str((page - 1) * 25)  # 哈哈哈哈哈哈哈哈哈哈哈小组
         # print(url)
         data = requests.get(url, headers=get_headers(url))
-        print('start_page:', start_page, 'resp:', data.ok)
+        print('page:', page, 'resp:', data.ok)
         data.encoding = 'utf-8'
         soup = BeautifulSoup(data.text, 'html.parser')
         links = soup.select('.title')
@@ -106,13 +112,19 @@ def get(start_page=1, end_page=1):
             if _link.find('title="', 0, len(_link)) > -1:
 
                 topic_values['group'] = '哈哈哈哈哈哈哈哈哈哈哈小组'
-                topic_values['title'] = link.select('a')[0]['title'] # 提取出话题标题
-                topic_values['link'] = link.select('a')[0]['href'] # 提取出话题链接
-                topic_values['topic_id'] = int(re.sub("\D", "", topic_values['link']))
+                topic_values['title'] = link.select('a')[0]['title']  # 提取出话题标题
+                topic_values['link'] = link.select('a')[0]['href']  # 提取出话题链接
+                topic_values['topic_id'] = int(
+                    re.sub(r"\D", "", topic_values['link']))
+                sql = 'insert into hazu_copy2(group_name,title,link,topic_id) values("%s","%s", "%s", %s);' % (
+                    topic_values['group'], topic_values['title'], topic_values['link'], topic_values['topic_id'])
+                try:
+                    cursor.execute(sql)
+                except Exception as e:
+                    # 每个页面有5个数据是重复的,每页一般会报错5次.
+                    # 不适用insert ignore into的原因是会增加id主键的数字
+                    print('事务处理失败', e)
 
-
-                sql = 'insert ignore into hazu_copy1(group_name,title,link,topic_id) values("%s","%s", "%s", %s);' %(topic_values['group'], topic_values['title'], topic_values['link'], topic_values['topic_id'])
-                cursor.execute(sql)
                 # 以字符串形式书写SQL语句R
                 # 拼接并执行sql语句
                 # cursor.executemany(sql, data)
@@ -128,15 +140,14 @@ def get(start_page=1, end_page=1):
                 # soup = BeautifulSoup(data.text, 'html.parser')
                 # timesource = soup.select('.color-green')[0].text
                 # _time = datetime.strptime(timesource, '%Y-%m-%d %H:%M:%S')
-                
+
         conn.commit()
-        start_page += 1
+        page += 1
         time.sleep(5)
-        if start_page > end_page:
-            start_page = 1
     # 关闭连接
     cursor.close()
     conn.close()
 
+
 if __name__ == '__main__':
-    get()
+    start()
