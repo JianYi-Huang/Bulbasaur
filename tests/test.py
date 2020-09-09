@@ -2,8 +2,31 @@ import requests
 import time
 import random
 import re
+import pymysql
 from bs4 import BeautifulSoup
 
+# 连接database
+conn = pymysql.connect(
+    host='118.24.61.204',
+    user='root',
+    password='961123Hx_mysql.',
+    database='proxies',
+    charset='utf8')
+# 得到一个可以执行SQL语句的光标对象
+cursor = conn.cursor()  # 执行完毕返回的结果集默认以元组显示
+
+def update_proxy(ipprot):
+    sql = 'insert into default_ip_copy1(ip) values("%s");' % (ipprot)
+    try:
+        # 执行sql语句
+        cursor.execute(sql)
+    except Exception as e:
+        # 有异常就回滚
+        conn.rollback()
+        print('事务处理失败', e)
+    else:
+        # 正常提交
+        conn.commit()
 
 def get_header(use='computer'):
     computer_agents = [
@@ -74,16 +97,18 @@ def inspect_ip(ipprot):
     time.sleep(1)
 
     url = 'http://118.24.61.204/ip'
-    url = 'https://www.douban.com/group/638298/discussion?start=25'
-    url = 'https://www.baidu.com'
+    # url = 'https://www.douban.com/group/638298/discussion?start=25'
+    # url = 'https://www.baidu.com'
     proxy = {'http': str(ipprot), 'https': str(ipprot)}
     try:
         request = requests.get(url, headers=header, proxies=proxy, verify=False, timeout=5)
         request.encoding = 'utf-8'
         soup = BeautifulSoup(request.text, 'html.parser')
+        print(soup)
         if request.status_code == 200: 
             print('可用代理:' + ipprot)
             # 写入数据库
+            update_proxy(ipprot)
         else:
             print('不可用代理:' + ipprot)
     except:
@@ -98,7 +123,7 @@ def inspect_ip(ipprot):
     #     print('不可用代理:' + ipprot)
 
 def IPList_61():
-    for q in [1,3]:
+    for q in range(1,30):
         url = 'http://www.66ip.cn/'+str(q)+'.html'
         html = requests.get(url, headers=header)
         html.encoding = 'gb18030'
@@ -117,16 +142,17 @@ def IPList_61():
                         else:
                             loader += ipport.text.strip()
                         initial = False
-                    # inspect_ip(loader)
-                    print(loader)
+                    inspect_ip(loader)
+                    # print(loader)
                 i += 1
         time.sleep(1)
 
 def IPList_jxl():
-    proxy = {'http': '116.196.85.150:3128', 'https': '116.196.85.150:3128'}
+    proxy = {'http': '83.97.23.90:18080', 'https': '83.97.23.90:18080'}
     for q in range(1,8):
         url = 'https://ip.jiangxianli.com/?page='+str(q)
         html = requests.get(url, headers=header, proxies=proxy)
+        # html = requests.get(url, headers=header)
         html.encoding = 'utf-8'
         if html != None:
             iplist = BeautifulSoup(html.text, 'html.parser')
@@ -142,14 +168,21 @@ def IPList_jxl():
                         else:
                             loader += ipport.text.strip()
                         initial = False
-                    # inspect_ip(loader)
-                    print(loader)
+                    inspect_ip(loader)
+                    # print(loader)
                 i += 1
         time.sleep(1)
-        
+
+
+
 
 if __name__ == '__main__':
+    sql = 'select id,ip from default_ip_copy1;'
+    cursor.execute(sql)
+    ret2 = cursor.fetchmany(8)
+    print(ret2)
+    last_id = cursor.lastrowid
+    print('插入后最后一条数据的ID是:', last_id)
     # IPList_61()
-    IPList_jxl()
-    # inspect_ip('116.196.85.150:3128')
-
+    # IPList_jxl()
+    # inspect_ip('178.217.88.173:53281')
