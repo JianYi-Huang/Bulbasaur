@@ -20,6 +20,9 @@ from datetime import datetime
 import pymysql
 import requests
 from bs4 import BeautifulSoup
+from my_module import config
+
+conf = config.ConfigFile().get('mysql')
 
 
 def get_headers(url, use='pc'):
@@ -81,14 +84,13 @@ def get_headers(url, use='pc'):
     }
     return headers
 
-
 # 连接database
 conn = pymysql.connect(
-    host='127.0.0.1',
-    user='root',
-    password='usbw',
-    database='douban',
-    charset='utf8mb4')
+    host = conf['host'],
+    user = conf['user'],
+    password = conf['password'],
+    database = 'douban',
+    charset = 'utf8mb4')
 # 得到一个可以执行SQL语句的光标对象
 cursor = conn.cursor()  # 执行完毕返回的结果集默认以元组显示
 
@@ -96,7 +98,7 @@ topic_values = {'group': None, 'title': None, 'author': None,
                 'link': None, 'time': None, 'topic_id': None}
 
 
-def start(monitor=True, sleep_time=60, page=1):
+def start(monitor=True, sleep_time=20, page=1):
     while True:
         print('已进入小组第' + str(page) + '页')
         url = 'https://www.douban.com/group/638298/discussion?start=' + \
@@ -116,7 +118,7 @@ def start(monitor=True, sleep_time=60, page=1):
                 topic_values['link'] = link.select('a')[0]['href']  # 提取出话题链接
                 topic_values['topic_id'] = int(
                     re.sub(r"\D", "", topic_values['link']))
-                sql = 'insert into hazu_copy2(group_name,title,link,topic_id) values("%s","%s", "%s", %s);' % (
+                sql = 'insert into hazu_copy1(group_name,title,link,topic_id) values("%s","%s", "%s", %s);' % (
                     topic_values['group'], topic_values['title'], topic_values['link'], topic_values['topic_id'])
                 try:
                     cursor.execute(sql)
