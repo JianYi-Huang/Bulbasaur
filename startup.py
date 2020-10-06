@@ -8,7 +8,7 @@
     License : MIT, see LICENSE for more details.
 '''
 
-
+from api import *
 import logging
 import random
 import re
@@ -21,6 +21,9 @@ import pymysql
 import requests
 from bs4 import BeautifulSoup
 from my_module import config
+from PIL import Image
+from io import BytesIO
+
 
 conf = config.ConfigFile().get('mysql')
 
@@ -95,10 +98,11 @@ conn = pymysql.connect(
 cursor = conn.cursor()  # 执行完毕返回的结果集默认以元组显示
 
 topic_values = {'group': None, 'title': None, 'author': None,
-                'link': None, 'time': None, 'topic_id': None}
+                'link': None, 'time': None, 'topic_id': None, 
+                'imgs_link': []}
 
 
-def start(monitor=True, sleep_time=20, page=1):
+def start(monitor=True, sleep_time=120, page=1):
     while True:
         print('已进入小组第' + str(page) + '页')
         url = 'https://www.douban.com/group/638298/discussion?start=' + \
@@ -118,14 +122,36 @@ def start(monitor=True, sleep_time=20, page=1):
                 topic_values['link'] = link.select('a')[0]['href']  # 提取出话题链接
                 topic_values['topic_id'] = int(
                     re.sub(r"\D", "", topic_values['link']))
-                sql = 'insert into hazu_copy1(group_name,title,link,topic_id) values("%s","%s", "%s", %s);' % (
+                sql = 'insert into hazu_1(group_name,title,link,topic_id) values("%s","%s", "%s", %s);' % (
                     topic_values['group'], topic_values['title'], topic_values['link'], topic_values['topic_id'])
                 try:
                     cursor.execute(sql)
                 except Exception as e:
                     # 每个页面有5个数据是重复的,每页一般会报错5次.
                     # 不适用insert ignore into的原因是会增加id主键的数字
-                    print('事务处理失败', e)
+                    # print('事务处理失败', e)
+                    pass
+                else:
+                    try:
+                        print('监测到新帖,开始分析')
+                        data = requests.get(topic_values['link'], headers=get_headers(url))
+                        data.encoding = 'utf-8'
+                        soup = BeautifulSoup(data.text, 'html.parser')
+                        imgs = soup.find_all('img', width=re.compile('^[0-9]*$'))
+                        img_num = 0
+                        print('图片发送中')
+                        for img in imgs:
+                            # topic_values['imgs_link'].append(img.get('src'))
+                            img_num += 1
+                            img_src = img.get('src')
+                            response = requests.get(img_src, headers=get_headers(img_src))
+                            image = Image.open(BytesIO(response.content))
+                            img_file_name = 'C:\\Users\\Administrator\\Desktop\\tmp\\imgs\\' + str(topic_values['topic_id']) + '_' + str(img_num) + '.jpg'
+                            image.save(img_file_name)
+                            time.sleep(1)
+                            send_image_msg('wxid_wlxi5z1id2g322', '22771355411@chatroom', img_file_name) # 后宫佳丽三千?? 沙雕网友500??
+                    except Exception as e:
+                        pass
 
                 # 以字符串形式书写SQL语句R
                 # 拼接并执行sql语句
@@ -142,11 +168,12 @@ def start(monitor=True, sleep_time=20, page=1):
                 # soup = BeautifulSoup(data.text, 'html.parser')
                 # timesource = soup.select('.color-green')[0].text
                 # _time = datetime.strptime(timesource, '%Y-%m-%d %H:%M:%S')
-
+                # r"^((http://)|(https://))?([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}(/)"
+                time.sleep(random.randint(7,12))
         conn.commit()
         if monitor is not True:
             page += 1
-        time.sleep(sleep_time)
+        time.sleep(random.randint(sleep_time-5,sleep_time+5))
     # 关闭连接
     cursor.close()
     conn.close()
